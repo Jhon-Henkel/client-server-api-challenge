@@ -1,4 +1,4 @@
-# client-server-api-challenge
+# Client Server API Challenge
 
 Neste desafio vamos aplicar o que aprendemos sobre webserver http, contextos,
 banco de dados e manipulação de arquivos com Go.
