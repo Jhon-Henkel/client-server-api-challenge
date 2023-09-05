@@ -7,3 +7,4 @@
 *.out
 go.work
 server/database.db
+client/cotacao.txt
