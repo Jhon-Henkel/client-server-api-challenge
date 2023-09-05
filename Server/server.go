@@ -43,7 +43,10 @@ func dollarExchangeRateHandler(response http.ResponseWriter, request *http.Reque
 		http.Error(response, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	saveExchangeRate(exchangeRate)
+	err = saveExchangeRate(exchangeRate)
+	if err != nil {
+		log.Println(err)
+	}
 	json.NewEncoder(response).Encode(exchangeRate.USDBRL)
 }
 
@@ -77,6 +80,9 @@ func saveExchangeRate(exchangeRate *ExchangeRate) error {
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
 	defer cancel()
-	db.WithContext(ctx).Create(&ExchangeRateDB{bid: exchangeRate.USDBRL.Bid})
+	dbError := db.WithContext(ctx).Create(&ExchangeRateDB{bid: exchangeRate.USDBRL.Bid})
+	if dbError.Error != nil {
+		return dbError.Error
+	}
 	return nil
 }
