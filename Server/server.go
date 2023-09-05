@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"io"
+	"log"
 	"net/http"
+	"time"
 )
 
 type ExchangeRate struct {
@@ -19,30 +21,36 @@ func main() {
 
 func dollarExchangeRateHandler(response http.ResponseWriter, request *http.Request) {
 	if request.URL.Path != "/cotacao" {
+		log.Println("Not found")
 		response.WriteHeader(http.StatusNotFound)
 		return
 	}
 	response.Header().Set("Content-Type", "application/json")
 	response.WriteHeader(http.StatusOK)
-	exchangeRate, err := DollarExchangeRateRequest()
+	exchangeRate, err := dollarExchangeRateRequest()
 	if err != nil {
-		http.Error(response, "Internal server error", http.StatusInternalServerError)
+		log.Println(err.Error())
+		http.Error(response, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	json.NewEncoder(response).Encode(exchangeRate.USDBRL)
 }
 
-func DollarExchangeRateRequest() (*ExchangeRate, error) {
-	req, err := http.Get("https://economia.awesomeapi.com.br/json/last/USD-BRL")
+func dollarExchangeRateRequest() (*ExchangeRate, error) {
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 200*time.Millisecond)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
 	if err != nil {
 		return nil, err
 	}
-	defer req.Body.Close()
-	res, err := io.ReadAll(req.Body)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	var exchangeRate ExchangeRate
-	err = json.Unmarshal(res, &exchangeRate)
+	err = json.NewDecoder(res.Body).Decode(&exchangeRate)
 	if err != nil {
 		return nil, err
 	}
