@@ -6,12 +6,22 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type ExchangeRate struct {
 	USDBRL struct {
 		Bid string `json:"bid"`
 	} `json:"USDBRL"`
+}
+
+type ExchangeRateDB struct {
+	ID  int `gorm:"primaryKey"`
+	bid string
+	gorm.Model
 }
 
 func main() {
@@ -33,6 +43,7 @@ func dollarExchangeRateHandler(response http.ResponseWriter, request *http.Reque
 		http.Error(response, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	saveExchangeRate(exchangeRate)
 	json.NewEncoder(response).Encode(exchangeRate.USDBRL)
 }
 
@@ -55,4 +66,14 @@ func dollarExchangeRateRequest() (*ExchangeRate, error) {
 		return nil, err
 	}
 	return &exchangeRate, nil
+}
+
+func saveExchangeRate(exchangeRate *ExchangeRate) error {
+	db, err := gorm.Open(sqlite.Open("./database.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.AutoMigrate(&ExchangeRateDB{})
+	db.Create(&ExchangeRateDB{bid: exchangeRate.USDBRL.Bid})
+	return nil
 }
