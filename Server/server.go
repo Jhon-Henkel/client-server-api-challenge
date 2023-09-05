@@ -74,6 +74,9 @@ func saveExchangeRate(exchangeRate *ExchangeRate) error {
 		log.Fatal(err)
 	}
 	db.AutoMigrate(&ExchangeRateDB{})
-	db.Create(&ExchangeRateDB{bid: exchangeRate.USDBRL.Bid})
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Millisecond)
+	defer cancel()
+	db.WithContext(ctx).Create(&ExchangeRateDB{bid: exchangeRate.USDBRL.Bid})
 	return nil
 }
