@@ -25,7 +25,7 @@ func main() {
 
 func requestDollarExchangeRate() (*ExchangeRate, error) {
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 3000*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, 300*time.Millisecond)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080/cotacao", nil)
 	if err != nil {
